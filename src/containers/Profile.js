@@ -1,12 +1,21 @@
 import React, { Component } from 'react';
 import Link from '../components/Link/Link';
 import List from '../components/List/List';
-import './Profile.css';
+import styled from 'styled-components';
+
+const ProfileWrapper = styled.div`
+    width: 50%;
+    margin: 10px auto;
+    `;
+const Avatar = styled.img`
+   width: 150px;
+   `;
 class Profile extends Component {
     constructor() {
         super();
         this.state = {
         data: {},
+        repositories: [],
         loading: true,
         }
     }
@@ -14,16 +23,20 @@ class Profile extends Component {
         const profile = await
         fetch('https://api.github.com/users/ved6053');
         const profileJSON = await profile.json();
+        const repositories = await fetch(profileJSON.repos_url);
+        const repositoriesJSON = await repositories.json();
+      
         if (profileJSON) {
                 this.setState({
                 data: profileJSON,
+                repositories: repositoriesJSON,
                 loading: false,
             })
         }
     }
 
     render() {
-       const { data, loading } = this.state;
+       const { data, loading, repositories } = this.state;
        if (loading) {
         return <div>Loading...</div>;
        }
@@ -36,11 +49,16 @@ class Profile extends Component {
           { label: 'email', value: data.email },
           { label: 'bio', value: data.bio }
        ];
+       const projects = repositories.map(repository => ({
+        label: repository.name,
+        value: <Link url={repository.html_url} title='Github URL' />
+       }));
         return (
-            <div className='Profile-container'>
-                <img className='Profile-avatar' src={data.avatar_url} alt='avatar' />
-                <List items={items} />
-            </div>
+            <ProfileWrapper>
+                <Avatar src={data.avatar_url} alt='avatar'/>
+                <List title='Profile' items={items} />
+                <List title='Projects' items={projects} />
+            </ProfileWrapper>
         );
     }
 }
